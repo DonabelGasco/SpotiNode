@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Clone</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #121212;
+            color: #b3b3b3;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 {
+            color: #1db954;
+            text-align: center;
+        }
+
+        form {
+            background: #282828;
+            padding: 100px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px #1db954;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #333;
+            border-radius: 5px;
+            background-color: #3e3e3e;
+            color: #fff;
+        }
+
+        button {
+            background-color: #1db954;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1aa34a;
+        }
+
+        #songs-list div {
+            background: #282828;
+            padding: 50px;
+            margin: 15px 0;
+            border-radius: 5px;
+            box-shadow: 0 4px 15px #1db954;
+        }
+
+        audio {
+            margin-top: 15px;
+            width: 100%;
+            background-color: #282828;
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Spotify Clone</h1>
+    <form id="add-song-form" enctype="multipart/form-data">
+        <input type="text" name="title" placeholder="Song Title" required>
+        <input type="text" name="artist" placeholder="Artist" required>
+        <input type="text" name="album" placeholder="Album" required>
+        <input type="text" name="genre" placeholder="Genre">
+        <input type="file" name="file" required>
+        <button type="submit">Add Song</button>
+    </form>
+
+    <h2>Search Songs</h2>
+    <input type="text" id="search-input" placeholder="Search by title, artist, or album">
+    <button id="search-button">Search</button>
+
+    <h2>Songs List</h2>
+    <div id="songs-list"></div>
+
+    <script>
+        document.getElementById('add-song-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            await fetch('/add-song', {
+                method: 'POST',
+                body: formData
+            });
+            e.target.reset();
+            loadSongs();
+        });
+
+        document.getElementById('search-button').addEventListener('click', async () => {
+            const query = document.getElementById('search-input').value;
+            const response = await fetch(`/search-songs?query=${encodeURIComponent(query)}`);
+            const songs = await response.json();
+            displaySongs(songs);
+        });
+
+        async function loadSongs() {
+            const response = await fetch('/songs');
+            const songs = await response.json();
+            displaySongs(songs);
+        }
+
+        function displaySongs(songs) {
+            const songsList = document.getElementById('songs-list');
+            songsList.innerHTML = '';
+
+            songs.forEach(song => {
+                const songElement = document.createElement('div');
+                songElement.innerHTML = `
+                    <p><strong>${song.title}</strong> by ${song.artist} (${song.album})</p>
+                    <audio controls>
+                        <source src="${song.url}" type="audio/mpeg">
+                        Your browser does not support the audio tag.
+                    </audio>
+                `;
+                songsList.appendChild(songElement);
+            });
+        }
+
+        window.onload = loadSongs;
+    </script>
+</body>
+</html>
